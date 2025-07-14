@@ -1,0 +1,7 @@
+streamlit 
+openai
+pandas
+groq
+openpyxl
+dotenv
+google-generativeai
