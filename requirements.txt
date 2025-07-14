@@ -5,3 +5,4 @@ groq
 openpyxl
 dotenv
 google-generativeai
+ngrok config add-authtoken 2wMrsPtor1zA9ZBGriAhGIJ2loy_7eYMwbetAUJqFUaPYGmUK
