@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Clover Flex",
+    "description": "Full-featured payment and business management device that’s optimized for mobility. See Clover Flex models and specifications."
+  },
+  {
+    "name": "Clover Mini",
+    "description": "All-in-one point of sale (POS) with payment acceptance. The device can function as a standalone POS, or it can serve as a customer-facing payment terminal when connected to another device, such as the Clover Station. See Clover Mini models and specifications."
+  },
+  {
+    "name": "Clover Mobile",
+    "description": "Mobile point of sale (POS) solution for quick payment processing at food trucks, festivals, and other line-based businesses. Pay-at-the-table restaurants also use Clover Mobile. See Clover Mobile specifications."
+  },
+  {
+    "name": "Clover Go",
+    "description": "Bring-your-own-device (BYOD) solution from Clover for taking EMV payments on mobile devices. Clover Go works with Apple (iOS®) and Android phones and tablets. See Clover Go solution and accessories."
+  },
+  {
+    "name": "Clover Station",
+    "description": "Countertop point of sale system (POS) to take payments, track inventory, manage timesheets, run reports, and print receipts. The device alternates between merchant- and customer-facing views. Clover Station requires the addition of a Clover Mini to accept PIN-based debit transactions and NFC payments like Apple Pay®. See Clover Station models and specifications."
+  }
+]
