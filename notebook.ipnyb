@@ -1,0 +1,258 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b982284c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# 🗨️ POS Recommender Chatbot for Google Colab Enterprise (Vertex AI Workbench)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "538acac8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ── 1. Install Dependencies ──────────────────────────────────────────\n",
+    "!pip install -q openai python-dotenv ipywidgets"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "effbe41c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ── 2. Import Libraries ──────────────────────────────────────────────\n",
+    "import os\n",
+    "import json\n",
+    "import re\n",
+    "from vertexai.language_models import ChatModel
+import vertexai
+from google.colab import userdata\n",
+    "from dotenv import load_dotenv\n",
+    "from datetime import datetime\n",
+    "from IPython.display import display, clear_output\n",
+    "import ipywidgets as widgets"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d1c36516",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ── 3. Load Environment Variables ─────────────────────────────────────\n",
+    "load_dotenv()\n",
+    "client = OpenAI(api_key=os.getenv(\"GOOGLE_API_KEY\"), base_url=\"https://generativelanguage.googleapis.com/v1beta/openai/\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4c10f130",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ── 4. Load JSON Data Files ───────────────────────────────────────────\n",
+    "with open(\"data/products.json\", \"r\", encoding=\"utf-8\") as f:\n",
+    "    PRODUCTS = json.load(f)\n",
+    "with open(\"data/premium.json\", \"r\", encoding=\"utf-8\") as f:\n",
+    "    PREMIUM = json.load(f)\n",
+    "with open(\"data/p_description.json\", \"r\", encoding=\"utf-8\") as f:\n",
+    "    P_DESCRIPTIONS = json.load(f)\n",
+    "with open(\"data/transaction.json\", \"r\", encoding=\"utf-8\") as f:\n",
+    "    TR = json.load(f)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f150a370",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def build_product_context(products):\n",
+    "    return \"\\n\".join(\n",
+    "        f\"- {p['name']} ({p['deviceType']}, Rental: {p['rentalCostPerMonth']}, \"\n",
+    "        f\"Printer: {p['builtInPrinter']}, Connectivity: {p['connectivity']}, \"\n",
+    "        f\"Battery: {p['batteryLife']}, Contract: {p['contractRequired']}, \"\n",
+    "        f\"Ideal For: {p['idealFor']})\"\n",
+    "        for p in products\n",
+    "    )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cadd8204",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "PRODUCT_CONTEXT = build_product_context(PRODUCTS)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1fa032c2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ── 5. Define System Prompt ──────────────────────────────────────────\n",
+    "SYSTEM_PROMPT = f\"\"\"\n",
+    "[Insert your full SYSTEM_PROMPT here – it's truncated in this code block for brevity.]\n",
+    "\"\"\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e5ec951a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ── 6. Session Setup ─────────────────────────────────────────────────\n",
+    "chat_history = [\n",
+    "    {\"role\": \"system\", \"content\": SYSTEM_PROMPT},\n",
+    "    {\"role\": \"assistant\", \"content\": \"Hi there! How can I help you?\"}\n",
+    "]\n",
+    "chat_start_time = datetime.now().strftime(\"%Y-%m-%d_%H-%M-%S\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "857a4114",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ── 7. Utility Functions ─────────────────────────────────────────────\n",
+    "def extract_customer_info(history):\n",
+    "    chat_text = \" \".join(msg[\"content\"] for msg in history if msg[\"role\"] == \"user\")\n",
+    "    name_match = re.search(r\"(?:my name is|contact name is)\\s+([A-Za-z\\s]+)\", chat_text, re.I)\n",
+    "    phone_match = re.search(r\"[0-9]{7,15}\", chat_text)\n",
+    "    email_match = re.search(r\"\\b[\\w\\.-]+@[\\w\\.-]+\\.\\w{2,4}\\b\", chat_text)\n",
+    "    business_match = re.search(r\"(?:business name is|my business is)\\s+([A-Za-z0-9\\s&,'\\\"-]+)\", chat_text, re.I)\n",
+    "    return {\n",
+    "        \"business_name\": business_match.group(1).strip() if business_match else None,\n",
+    "        \"customer_name\": name_match.group(1).strip() if name_match else None,\n",
+    "        \"phone\": phone_match.group(0) if phone_match else None,\n",
+    "        \"email\": email_match.group(0) if email_match else None\n",
+    "    }"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5258fa0b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def save_chat(history):\n",
+    "    info = extract_customer_info(history)\n",
+    "    data = {\n",
+    "        \"chat_start_time\": chat_start_time,\n",
+    "        \"chat\": history[1:],\n",
+    "        \"contact_info\": info\n",
+    "    }\n",
+    "    os.makedirs(\"logs\", exist_ok=True)\n",
+    "    with open(f\"logs/chat_{chat_start_time}.json\", \"w\", encoding=\"utf-8\") as f:\n",
+    "        json.dump(data, f, indent=2, ensure_ascii=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "110f8dd9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# ── 8. UI and Chat Loop ──────────────────────────────────────────────\n",
+    "chat_input = widgets.Textarea(placeholder=\"Type your message here...\", layout=widgets.Layout(width=\"100%\", height=\"100px\"))\n",
+    "submit_button = widgets.Button(description=\"Send\", button_style=\"success\")\n",
+    "exit_button = widgets.Button(description=\"Exit\", button_style=\"danger\")\n",
+    "chat_output = widgets.Output()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a7a66ad5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def on_submit_click(_):\n",
+    "    user_text = chat_input.value.strip()\n",
+    "    chat_input.value = \"\"\n",
+    "    if not user_text:\n",
+    "        return\n",
+    "    chat_history.append({\"role\": \"user\", \"content\": user_text})\n",
+    "    with chat_output:\n",
+    "        clear_output(wait=True)\n",
+    "        print(\"You:\", user_text)\n",
+    "        print(\"\\n🤖 Thinking...\")\n",
+    "    try:\n",
+    "        response = client.chat.completions.create(\n",
+    "            model=\"models/gemini-1.5-flash-latest\",\n",
+    "            messages=chat_history,\n",
+    "            temperature=0.2,\n",
+    "        )\n",
+    "        reply = response.choices[0].message.content.strip()\n",
+    "        chat_history.append({\"role\": \"assistant\", \"content\": reply})\n",
+    "    except Exception as e:\n",
+    "        reply = f\"❌ Error: {str(e)}\"\n",
+    "        chat_history.append({\"role\": \"assistant\", \"content\": reply})\n",
+    "    with chat_output:\n",
+    "        clear_output(wait=True)\n",
+    "        for msg in chat_history[1:]:\n",
+    "            role = \"You\" if msg[\"role\"] == \"user\" else \"Assistant\"\n",
+    "            print(f\"{role}: {msg['content']}\\n\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8095a5e4",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def on_exit_click(_):\n",
+    "    save_chat(chat_history)\n",
+    "    with chat_output:\n",
+    "        clear_output()\n",
+    "        print(\"✅ Chat saved. You may now close the notebook.\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "1fbfc524",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "submit_button.on_click(on_submit_click)\n",
+    "exit_button.on_click(on_exit_click)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5c537e61",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "display(widgets.VBox([chat_input, submit_button, exit_button, chat_output]))"
+   ]
+  }
+ ],
+ "metadata": {},
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
