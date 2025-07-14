@@ -1,0 +1,37 @@
+[
+    {   "name":"Clover Flex",
+        "FixedTransactionFees": "10p",
+    "VariableTransactionFeess":"1.2%"
+    },
+    {   "name":"Clover Mini",
+        "FixedTransactionFees": "10p",
+    "VariableTransactionFeess":"1.3%"
+    },
+    {
+        "name":"Clover Station Duo",
+        "FixedTransactionFees": "15p",
+    "VariableTransactionFeess":"1.4%"
+
+    },
+    {
+        "name":"Handepay CounterTop",
+        "FixedTransactionFees": "20p",
+    "VariableTransactionFeess":"1.4%"
+    },
+    {
+        "name":"Handepay Mobile(Saturn)",
+        "FixedTransactionFees": "20p",
+    "VariableTransactionFeess":"1.5%"
+       
+    },
+    {
+        "name": "Stripe WisePad 3",
+         "FixedTransactionFees": "20p",
+    "VariableTransactionFeess":"1.5%"
+    },
+    {
+        "name": "Stripe WisePOS E",
+        "FixedTransactionFees": "20p",
+    "VariableTransactionFeess":"1.5%"
+    }
+]
