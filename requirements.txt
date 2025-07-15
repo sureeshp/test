@@ -6,3 +6,4 @@ openpyxl
 dotenv
 google-generativeai
 
+AIzaSyCRcLWKzo6SYAvMbCrB0RtPSQA8siGMAp8
